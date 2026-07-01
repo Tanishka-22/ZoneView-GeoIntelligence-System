@@ -1,0 +1,371 @@
+// ============================================================
+// ZoneView Database Schema
+// ============================================================
+// This file is the single source of truth for the database.
+// Every model here maps to a table in PostgreSQL.
+// Run `npx prisma migrate dev` after any change.
+// ============================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+enum PlanType {
+  FREE
+  PRO
+  TEAM
+}
+
+// ============================================================
+// USER & IDENTITY
+// ============================================================
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String?
+  avatarUrl    String?
+  passwordHash String?
+  googleId     String?  @unique
+  role         Role     @default(USER)
+  isVerified   Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  subscription  Subscription?
+  bookmarks     Bookmark[]
+  notifications Notification[]
+  usageRecords  UsageRecord[]
+  reports       Report[]
+
+  @@map("users")
+}
+
+// ============================================================
+// SUBSCRIPTION & PLANS
+// ============================================================
+
+model Plan {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  type        PlanType @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model Subscription {
+  id        String             @id @default(cuid())
+  status    SubscriptionStatus @default(ACTIVE)
+  startDate DateTime           @default(now())
+  endDate   DateTime?
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+
+  // Foreign keys
+  userId String @unique
+  planId String
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan Plan @relation(fields: [planId], references: [id])
+
+  @@map("subscriptions")
+}
+
+// ============================================================
+// LOCATION
+// ============================================================
+
+model Location {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  country     String   @default("India")
+  state       String?
+  district    String?
+  city        String?
+  zone        String?
+  latitude    Float?
+  longitude   Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  developmentRecords DevelopmentRecord[]
+  aiInsights         AIInsight[]
+  reports            Report[]
+  bookmarks          Bookmark[]
+
+  @@index([name])
+  @@index([state])
+  @@map("locations")
+}
+
+// ============================================================
+// DEVELOPMENT RECORDS
+// ============================================================
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  developmentRecords DevelopmentRecord[]
+
+  @@map("categories")
+}
+
+model Organization {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  website     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  developmentRecords DevelopmentRecord[]
+
+  @@map("organizations")
+}
+
+model DataSource {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  url         String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  developmentRecords DevelopmentRecord[]
+
+  @@map("data_sources")
+}
+
+enum RecordStatus {
+  PLANNED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+model DevelopmentRecord {
+  id          String       @id @default(cuid())
+  title       String
+  description String?
+  status      RecordStatus @default(PLANNED)
+  startDate   DateTime?
+  endDate     DateTime?
+  budget      Float?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Foreign keys
+  locationId     String
+  categoryId     String
+  organizationId String?
+  dataSourceId   String?
+
+  // Relations
+  location     Location      @relation(fields: [locationId], references: [id])
+  category     Category      @relation(fields: [categoryId], references: [id])
+  organization Organization? @relation(fields: [organizationId], references: [id])
+  dataSource   DataSource?   @relation(fields: [dataSourceId], references: [id])
+  media        Media[]
+  aiInsights   AIInsight[]
+
+  @@unique([title, locationId]) 
+  @@index([locationId])
+  @@index([categoryId])
+  @@index([organizationId])
+  @@index([status])
+  @@map("development_records")
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  url       String
+  type      String
+  label     String?
+  createdAt DateTime @default(now())
+
+  // Foreign key
+  developmentRecordId String
+
+  // Relations
+  developmentRecord DevelopmentRecord @relation(fields: [developmentRecordId], references: [id], onDelete: Cascade)
+
+  @@map("media")
+}
+
+// ============================================================
+// AI INSIGHTS
+// ============================================================
+
+enum InsightType {
+  REGIONAL_SUMMARY
+  DEVELOPMENT_ANALYSIS
+  TREND_DETECTION
+  COMPARATIVE_ANALYSIS
+}
+
+model AIInsight {
+  id               String      @id @default(cuid())
+  type             InsightType
+  content          String      @db.Text
+  promptTokens     Int?
+  completionTokens Int?
+  model            String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  // Foreign keys (one or the other, not both required)
+  locationId          String?
+  developmentRecordId String?
+
+  // Relations
+  location          Location?          @relation(fields: [locationId], references: [id])
+  developmentRecord DevelopmentRecord? @relation(fields: [developmentRecordId], references: [id])
+
+  @@index([locationId])
+  @@map("ai_insights")
+}
+
+// ============================================================
+// REPORTS
+// ============================================================
+
+enum ReportStatus {
+  PENDING
+  GENERATING
+  READY
+  FAILED
+}
+
+model Report {
+  id        String       @id @default(cuid())
+  title     String
+  status    ReportStatus @default(PENDING)
+  fileUrl   String?
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  // Foreign keys
+  userId     String
+  locationId String?
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id])
+  location Location? @relation(fields: [locationId], references: [id])
+
+  @@index([userId])
+  @@map("reports")
+}
+
+// ============================================================
+// BOOKMARKS
+// ============================================================
+
+model Bookmark {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+
+  // Foreign keys
+  userId     String
+  locationId String?
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  location Location? @relation(fields: [locationId], references: [id])
+
+  @@unique([userId, locationId])
+  @@index([userId])
+  @@map("bookmarks")
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Foreign key
+  userId String
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+// ============================================================
+// USAGE TRACKING
+// ============================================================
+
+enum UsageFeature {
+  LOCATION_SEARCH
+  AI_INSIGHT
+  AI_REPORT
+  REGION_COMPARE
+  API_REQUEST
+}
+
+model UsageRecord {
+  id           String       @id @default(cuid())
+  feature      UsageFeature
+  count        Int          @default(0)
+  billingCycle String       // e.g. "2025-01" for January 2025
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // Foreign key
+  userId String
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, feature, billingCycle])
+  @@index([userId])
+  @@map("usage_records")
+}
