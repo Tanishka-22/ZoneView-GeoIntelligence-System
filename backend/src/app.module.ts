@@ -15,6 +15,7 @@ import { WorkersModule } from './workers.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { UsageModule } from './modules/usage/usage.module';
 import { CommonModule } from './common/common.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 
 import { envValidationSchema } from './config/env.validation';
 import appConfig from './config/app.config';
@@ -50,6 +51,7 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
     ReportsModule,
     SubscriptionsModule,
     UsageModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

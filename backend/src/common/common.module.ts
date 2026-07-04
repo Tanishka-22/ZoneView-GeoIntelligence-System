@@ -14,6 +14,12 @@ import { UsageModule } from '../modules/usage/usage.module';
 @Module({
   imports: [SubscriptionsModule, UsageModule],
   providers: [SubscriptionGuard, UsageGuard, RolesGuard],
-  exports: [SubscriptionGuard, UsageGuard, RolesGuard],
+  exports: [
+    SubscriptionGuard,
+    UsageGuard,
+    RolesGuard,
+    SubscriptionsModule,
+    UsageModule,
+  ],
 })
 export class CommonModule {}
