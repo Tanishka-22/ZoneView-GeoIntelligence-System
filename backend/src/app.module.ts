@@ -25,7 +25,8 @@ import redisConfig from './config/redis.config';
 import aiConfig from './config/ai.config';
 import { CacheModule } from './infrastructure/cache/cache.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
-
+import { WinstonModule } from 'nest-winston';
+import { loggerConfig } from './config/logger.config';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -36,6 +37,7 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
         abortEarly: true,
       },
     }),
+    WinstonModule.forRoot(loggerConfig()),
     DatabaseModule,
     CommonModule,
     UsersModule,
