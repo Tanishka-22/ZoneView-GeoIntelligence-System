@@ -1,12 +1,12 @@
 # ─── Stage 1: Builder ─────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
 # Copy package files first — Docker layer caching means
 # npm install only re-runs when package.json changes
 COPY package*.json ./
-COPY prisma.json ./
+# COPY prisma.json ./
 
 RUN npm ci
 
@@ -16,7 +16,7 @@ RUN npm run build
 RUN npx prisma generate --schema=src/database/prisma/schema.prisma
 
 # ─── Stage 2: Production Runner ───────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:24-alpine AS runner
 
 WORKDIR /app
 
