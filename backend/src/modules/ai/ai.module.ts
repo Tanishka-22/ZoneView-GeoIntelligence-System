@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AIService } from './ai.service';
 import { MockAIProvider } from './providers/mock.provider';
-//import { OpenAIProvider } from './providers/openai.provider';
+import { OpenAIProvider } from './providers/openai.provider';
 import { ContextBuilderService } from './services/context-builder.service';
 import { PromptBuilderService } from './services/prompt-builder.service';
 import { AIInsightService } from './services/ai-insight.service';
@@ -21,10 +21,10 @@ import { UsageModule } from '../usage/usage.module';
   providers: [
     {
       provide: AI_PROVIDER,
-      useClass: MockAIProvider,
+      useClass: OpenAIProvider,
     },
     MockAIProvider,
-    //OpenAIProvider,
+    OpenAIProvider,
     AIService,
     ContextBuilderService,
     PromptBuilderService,
