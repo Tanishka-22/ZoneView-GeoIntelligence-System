@@ -39,6 +39,7 @@ import { QUEUES } from './queue.constants';
       { name: QUEUES.REPORTS },
       { name: QUEUES.NOTIFICATIONS },
       { name: QUEUES.AI_GENERATION },
+      { name: QUEUES.DATA_SYNC },
     ),
   ],
   exports: [BullModule],

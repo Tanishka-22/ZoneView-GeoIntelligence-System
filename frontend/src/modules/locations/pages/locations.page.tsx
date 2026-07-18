@@ -2,14 +2,22 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { locationsApi } from '../api/locations.api';
+import { IndiaLocationsMap } from '../components/india-map';
 
 export function LocationsPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
+  // Paginated grid — what the user browses
   const { data, isLoading, isError } = useQuery({
     queryKey: ['locations', { page, search }],
     queryFn: () => locationsApi.getAll({ page, limit: 9, search: search || undefined }),
+  });
+
+  // Separate query for map markers — not paginated, follows the same search term
+  const { data: mapData } = useQuery({
+    queryKey: ['locations-map', { search }],
+    queryFn: () => locationsApi.getAll({ limit: 100, search: search || undefined }),
   });
 
   const locations = data?.data ?? [];
@@ -20,7 +28,7 @@ export function LocationsPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Locations</h1>
         <p className="text-gray-500 mt-1">
-          Browse regional development data across Madhya Pradesh
+          Browse regional development data across India
         </p>
       </div>
 
@@ -28,7 +36,7 @@ export function LocationsPage() {
       <div className="mb-6">
         <input
           type="text"
-          placeholder="Search locations..."
+          placeholder="Search any city in India..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -38,18 +46,19 @@ export function LocationsPage() {
         />
       </div>
 
-      {/* States */}
-      {isLoading && (
-        <div className="text-sm text-gray-400">Loading locations...</div>
-      )}
+      {/* Map */}
+      <div className="mb-8">
+        <IndiaLocationsMap locations={mapData?.data ?? []} />
+        <p className="text-xs text-gray-400 mt-2">
+          Click a marker to view that location's regional intelligence.
+        </p>
+      </div>
 
+      {isLoading && <div className="text-sm text-gray-400">Loading locations...</div>}
       {isError && (
-        <div className="text-sm text-red-600">
-          Failed to load locations. Please try again.
-        </div>
+        <div className="text-sm text-red-600">Failed to load locations. Please try again.</div>
       )}
 
-      {/* Grid */}
       {!isLoading && !isError && (
         <>
           {locations.length === 0 ? (
@@ -68,9 +77,7 @@ export function LocationsPage() {
                     {location.name}
                   </div>
                   <div className="text-xs text-gray-400 mt-1">
-                    {[location.district, location.state]
-                      .filter(Boolean)
-                      .join(', ')}
+                    {[location.district, location.state].filter(Boolean).join(', ')}
                   </div>
                   {location.description && (
                     <p className="text-xs text-gray-500 mt-3 line-clamp-2">
@@ -85,7 +92,6 @@ export function LocationsPage() {
             </div>
           )}
 
-          {/* Pagination */}
           {meta && meta.totalPages > 1 && (
             <div className="flex items-center gap-2">
               <button

@@ -27,4 +27,9 @@ export const envValidationSchema = Joi.object({
 
   // AI
   OPENAI_API_KEY: Joi.string().optional(),
+
+  DATA_GOV_API_KEY: Joi.string().optional(),
+
+  RAZORPAY_KEY_ID: Joi.string().optional(),
+  RAZORPAY_KEY_SECRET: Joi.string().optional(),
 });

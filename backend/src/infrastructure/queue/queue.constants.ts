@@ -7,6 +7,7 @@ export const QUEUES = {
   REPORTS: 'reports',
   NOTIFICATIONS: 'notifications',
   AI_GENERATION: 'ai-generation',
+  DATA_SYNC: 'data-sync',
 } as const;
 
 /**
@@ -23,5 +24,9 @@ export const JOBS = {
   },
   AI: {
     GENERATE_INSIGHT: 'generate-insight',
+  },
+  DATA_SYNC: {
+    FULL_SYNC: 'full-sync',
+    DATASET_SYNC: 'dataset-sync',
   },
 } as const;

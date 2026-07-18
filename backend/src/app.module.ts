@@ -27,12 +27,26 @@ import { CacheModule } from './infrastructure/cache/cache.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { WinstonModule } from 'nest-winston';
 import { loggerConfig } from './config/logger.config';
+
+import { CsvImportModule } from './modules/admin/import/csv-import.module';
+import ingestionConfig from './config/ingestion.config';
+import { IngestionModule } from './modules/admin/ingestion/ingestion.module';
+
+import paymentConfig from './config/payment.config';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       validationSchema: envValidationSchema,
-      load: [appConfig, authConfig, databaseConfig, redisConfig, aiConfig],
+      load: [
+        appConfig,
+        authConfig,
+        databaseConfig,
+        redisConfig,
+        aiConfig,
+        ingestionConfig,
+        paymentConfig,
+      ],
       validationOptions: {
         abortEarly: true,
       },
@@ -54,6 +68,8 @@ import { loggerConfig } from './config/logger.config';
     SubscriptionsModule,
     UsageModule,
     NotificationsModule,
+    CsvImportModule,
+    IngestionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

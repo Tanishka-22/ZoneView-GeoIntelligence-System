@@ -24,10 +24,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     private readonly usersService: UsersService,
   ) {
     super({
-  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-  ignoreExpiration: false,
-  secretOrKey: configService.get<string>('auth.accessSecret')!,
-});
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      ignoreExpiration: false,
+      secretOrKey: configService.get<string>('auth.accessSecret')!,
+    });
   }
 
   /**
@@ -37,13 +37,16 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
    * and haven't been deleted or banned since the token was issued.
    */
   async validate(payload: JwtPayload) {
+    console.log('JWT Payload:', payload); //added
     const user = await this.usersService.findById(payload.sub);
+    console.log('User from DB:', user); //added
 
     if (!user) {
       throw new UnauthorizedException('User no longer exists');
     }
 
     // Return only what controllers need — never return passwordHash
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { passwordHash: _, ...safeUser } = user;
     return safeUser;
   }

@@ -3,6 +3,8 @@ import { BullModule } from '@nestjs/bullmq';
 import { ReportWorker } from './workers/report.worker';
 import { NotificationWorker } from './workers/notification.worker';
 import { AIModule } from './modules/ai/ai.module';
+import { DataSyncWorker } from './workers/data-sync.worker';
+import { IngestionModule } from './modules/admin/ingestion/ingestion.module';
 import { QUEUES } from './infrastructure/queue/queue.constants';
 
 /**
@@ -21,9 +23,11 @@ import { QUEUES } from './infrastructure/queue/queue.constants';
     BullModule.registerQueue(
       { name: QUEUES.REPORTS },
       { name: QUEUES.NOTIFICATIONS },
+      { name: QUEUES.DATA_SYNC },
     ),
     AIModule, // ReportWorker uses AIInsightService
+    IngestionModule, // DataSyncWorker uses IngestionService
   ],
-  providers: [ReportWorker, NotificationWorker],
+  providers: [ReportWorker, NotificationWorker, DataSyncWorker],
 })
 export class WorkersModule {}

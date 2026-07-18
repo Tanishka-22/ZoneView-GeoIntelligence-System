@@ -183,6 +183,10 @@ async function main() {
   dataSources.forEach((d) => console.log(`   ✓ ${d.name}`));
   console.log();
 
+  // Lookups needed early — used by both pan-India seeding (5b) and main records (6)
+const manualSource = dataSources.find((d) => d.name === 'Manual Entry')!;
+const smartCitiesSource = dataSources.find((d) => d.name === 'Smart Cities Mission Portal')!;
+
   // ============================================================
   // 5. LOCATIONS
   // ============================================================
@@ -245,6 +249,200 @@ async function main() {
   console.log(`   ✓ Indore    (id: ${indore.id})\n`);
 
   // ============================================================
+  // 5b. PAN-INDIA LOCATIONS (expanding beyond Madhya Pradesh)
+  // ============================================================
+  console.log('🇮🇳 Seeding pan-India locations...');
+
+  const indiaCities = [
+    {
+      name: 'Delhi',
+      slug: 'delhi',
+      state: 'Delhi',
+      lat: 28.7041,
+      lng: 77.1025,
+    },
+    {
+      name: 'Mumbai',
+      slug: 'mumbai',
+      state: 'Maharashtra',
+      lat: 19.076,
+      lng: 72.8777,
+    },
+    {
+      name: 'Bengaluru',
+      slug: 'bengaluru',
+      state: 'Karnataka',
+      lat: 12.9716,
+      lng: 77.5946,
+    },
+    {
+      name: 'Chennai',
+      slug: 'chennai',
+      state: 'Tamil Nadu',
+      lat: 13.0827,
+      lng: 80.2707,
+    },
+    {
+      name: 'Kolkata',
+      slug: 'kolkata',
+      state: 'West Bengal',
+      lat: 22.5726,
+      lng: 88.3639,
+    },
+    {
+      name: 'Hyderabad',
+      slug: 'hyderabad',
+      state: 'Telangana',
+      lat: 17.385,
+      lng: 78.4867,
+    },
+    {
+      name: 'Pune',
+      slug: 'pune',
+      state: 'Maharashtra',
+      lat: 18.5204,
+      lng: 73.8567,
+    },
+    {
+      name: 'Ahmedabad',
+      slug: 'ahmedabad',
+      state: 'Gujarat',
+      lat: 23.0225,
+      lng: 72.5714,
+    },
+    {
+      name: 'Jaipur',
+      slug: 'jaipur',
+      state: 'Rajasthan',
+      lat: 26.9124,
+      lng: 75.7873,
+    },
+    {
+      name: 'Lucknow',
+      slug: 'lucknow',
+      state: 'Uttar Pradesh',
+      lat: 26.8467,
+      lng: 80.9462,
+    },
+    {
+      name: 'Chandigarh',
+      slug: 'chandigarh',
+      state: 'Chandigarh',
+      lat: 30.7333,
+      lng: 76.7794,
+    },
+    {
+      name: 'Patna',
+      slug: 'patna',
+      state: 'Bihar',
+      lat: 25.5941,
+      lng: 85.1376,
+    },
+    {
+      name: 'Bhubaneswar',
+      slug: 'bhubaneswar',
+      state: 'Odisha',
+      lat: 20.2961,
+      lng: 85.8245,
+    },
+    {
+      name: 'Guwahati',
+      slug: 'guwahati',
+      state: 'Assam',
+      lat: 26.1445,
+      lng: 91.7362,
+    },
+    {
+      name: 'Kochi',
+      slug: 'kochi',
+      state: 'Kerala',
+      lat: 9.9312,
+      lng: 76.2673,
+    },
+    {
+      name: 'Surat',
+      slug: 'surat',
+      state: 'Gujarat',
+      lat: 21.1702,
+      lng: 72.8311,
+    },
+    {
+      name: 'Nagpur',
+      slug: 'nagpur',
+      state: 'Maharashtra',
+      lat: 21.1458,
+      lng: 79.0882,
+    },
+    {
+      name: 'Coimbatore',
+      slug: 'coimbatore',
+      state: 'Tamil Nadu',
+      lat: 11.0168,
+      lng: 76.9558,
+    },
+    {
+      name: 'Visakhapatnam',
+      slug: 'visakhapatnam',
+      state: 'Andhra Pradesh',
+      lat: 17.6868,
+      lng: 83.2185,
+    },
+    {
+      name: 'Dehradun',
+      slug: 'dehradun',
+      state: 'Uttarakhand',
+      lat: 30.3165,
+      lng: 78.0322,
+    },
+  ];
+
+  const createdCities: Array<
+    Awaited<ReturnType<typeof prisma.location.upsert>>
+  > = [];
+  for (const city of indiaCities) {
+    const created = await prisma.location.upsert({
+      where: { slug: city.slug },
+      update: {},
+      create: {
+        name: city.name,
+        slug: city.slug,
+        description: `${city.name} is a major urban center in ${city.state}, tracked by ZoneView for regional development intelligence.`,
+        country: 'India',
+        state: city.state,
+        city: city.name,
+        latitude: city.lat,
+        longitude: city.lng,
+      },
+    });
+    createdCities.push(created);
+    console.log(`   ✓ ${city.name}, ${city.state}`);
+  }
+
+  // Light sample development records so the map/detail pages aren't empty
+  const govInitCategory = categories.find(
+    (c) => c.slug === 'government-initiative',
+  )!;
+  const scmOrg = organizations.find((o) => o.name === 'Smart Cities Mission')!;
+
+  await prisma.developmentRecord.createMany({
+    data: createdCities.map((city) => ({
+      title: `${city.name} Smart City Digital Infrastructure Initiative`,
+      description: `Digital governance and urban infrastructure upgrade program for ${city.name} under the Smart Cities Mission.`,
+      status: RecordStatus.ONGOING,
+      budget: 150000000 + Math.random() * 200000000,
+      locationId: city.id,
+      categoryId: govInitCategory.id,
+      organizationId: scmOrg.id,
+      dataSourceId: manualSource.id,
+    })),
+    skipDuplicates: true,
+  });
+
+  console.log(
+    `   ✓ ${createdCities.length} sample development records added\n`,
+  );
+
+  // ============================================================
   // 6. DEVELOPMENT RECORDS
   // ============================================================
   console.log('🏗️  Seeding development records...');
@@ -266,10 +464,8 @@ async function main() {
   )!;
   const scm = organizations.find((o) => o.name === 'Smart Cities Mission')!;
 
-  const smartCitiesSource = dataSources.find(
-    (d) => d.name === 'Smart Cities Mission Portal',
-  )!;
-  const manualSource = dataSources.find((d) => d.name === 'Manual Entry')!;
+  //const smartCitiesSource = dataSources.find((d) => d.name === 'Smart Cities Mission Portal',)!;
+  //const manualSource = dataSources.find((d) => d.name === 'Manual Entry')!;
 
   await prisma.developmentRecord.createMany({
     data: [

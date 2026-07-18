@@ -1,12 +1,18 @@
 import { Module } from '@nestjs/common';
-import { SubscriptionsService } from './subscriptions.service';
+import { BullModule } from '@nestjs/bullmq';
+import { SubscriptionsService, PAYMENT_PROVIDER } from './subscriptions.service';
 import { SubscriptionsController } from './subscriptions.controller';
-//import { PrismaModule } from '../../database/prisma.service';
+import { RazorpayPaymentProvider } from './providers/razorpay-payment.provider';
+import { QUEUES } from '../../infrastructure/queue/queue.constants';
 
 @Module({
-  //imports: [PrismaModule],
+  imports: [BullModule.registerQueue({ name: QUEUES.NOTIFICATIONS })],
   controllers: [SubscriptionsController],
-  providers: [SubscriptionsService],
-  exports: [SubscriptionsService], // SubscriptionGuard needs this
+  providers: [
+    SubscriptionsService,
+    RazorpayPaymentProvider,
+    { provide: PAYMENT_PROVIDER, useClass: RazorpayPaymentProvider },
+  ],
+  exports: [SubscriptionsService],
 })
 export class SubscriptionsModule {}

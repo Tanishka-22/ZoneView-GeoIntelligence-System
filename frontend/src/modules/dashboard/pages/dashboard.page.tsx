@@ -35,7 +35,7 @@ export function DashboardPage() {
           Welcome back{user?.name ? `, ${user.name}` : ''}
         </h1>
         <p className="text-gray-500 mt-1">
-          Regional intelligence for Madhya Pradesh
+          Regional intelligence for India
         </p>
       </div>
 

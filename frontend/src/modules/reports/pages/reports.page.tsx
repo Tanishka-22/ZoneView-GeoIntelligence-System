@@ -29,8 +29,8 @@ export function ReportsPage() {
   });
 
   const { data: locationsData } = useQuery({
-    queryKey: ['locations', { page: 1, limit: 100 }],
-    queryFn: () => locationsApi.getAll({ limit: 100 }),
+    queryKey: ['locations', { page: 1, limit: 200 }],
+    queryFn: () => locationsApi.getAll({ limit: 200 }),
   });
 
   const createMutation = useMutation({
